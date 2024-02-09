@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-import random
 import gym
 import numpy as np
 from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
+import secrets
 
 EPISODES = 1000
 
@@ -36,12 +36,12 @@ class DQNAgent:
 
     def act(self, state):
         if np.random.rand() <= self.epsilon:
-            return random.randrange(self.action_size)
+            return secrets.SystemRandom().randrange(self.action_size)
         act_values = self.model.predict(state)
         return np.argmax(act_values[0])  # returns action
 
     def replay(self, batch_size):
-        minibatch = random.sample(self.memory, batch_size)
+        minibatch = secrets.SystemRandom().sample(self.memory, batch_size)
         states, targets_f = [], []
         for state, action, reward, next_state, done in minibatch:
             target = reward
