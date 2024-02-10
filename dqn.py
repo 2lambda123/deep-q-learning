@@ -11,6 +11,19 @@ EPISODES = 1000
 
 class DQNAgent:
     def __init__(self, state_size, action_size):
+        """This function initializes the parameters for the agent's neural network model and sets the exploration and discount rates.
+        Parameters:
+            - state_size (int): The size of the state space.
+            - action_size (int): The size of the action space.
+        Returns:
+            - None: This function does not return any values.
+        Processing Logic:
+            - Sets the state and action sizes.
+            - Initializes a memory deque.
+            - Sets the discount and exploration rates.
+            - Sets the learning rate.
+            - Builds the neural network model."""
+        
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
@@ -22,6 +35,19 @@ class DQNAgent:
         self.model = self._build_model()
 
     def _build_model(self):
+        """Builds a neural network model for deep Q-learning.
+        Parameters:
+            - self (object): The object that calls the function.
+        Returns:
+            - model (object): The compiled neural network model.
+        Processing Logic:
+            - Add 2 dense layers with 24 nodes each.
+            - Use ReLU activation function.
+            - Add a final dense layer with the number of actions as nodes.
+            - Use linear activation function.
+            - Compile the model with mean squared error loss and Adam optimizer.
+            - Return the compiled model."""
+        
         # Neural Net for Deep-Q learning Model
         model = Sequential()
         model.add(Dense(24, input_dim=self.state_size, activation='relu'))
@@ -32,15 +58,47 @@ class DQNAgent:
         return model
 
     def memorize(self, state, action, reward, next_state, done):
+        """"Stores the state, action, reward, next_state, and done in a memory list."
+        Parameters:
+            - state (object): The current state of the environment.
+            - action (object): The action taken by the agent.
+            - reward (float): The reward received for taking the action.
+            - next_state (object): The resulting state after taking the action.
+            - done (bool): Indicates if the episode is complete.
+        Returns:
+            - None: This function does not return anything.
+        Processing Logic:
+            - Adds the state, action, reward, next_state, and done to the memory list."""
+        
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
+        """"Performs an action based on the given state and returns the chosen action. If the random number generated is less than or equal to the epsilon value, a random action is chosen. Otherwise, the model predicts the action values for the given state and returns the action with the highest value.
+        Parameters:
+            - state (array): The current state of the environment.
+        Returns:
+            - action (int): The chosen action based on the given state.
+        Processing Logic:
+            - Randomly choose an action with probability epsilon.
+            - Predict the action values for the given state.
+            - Return the action with the highest value.
+            - If multiple actions have the same value, the first one is returned.""""
+        
         if np.random.rand() <= self.epsilon:
             return secrets.SystemRandom().randrange(self.action_size)
         act_values = self.model.predict(state)
         return np.argmax(act_values[0])  # returns action
 
     def replay(self, batch_size):
+        """Returns:
+            - None: No return value.
+        Processing Logic:
+            - Randomly sample a minibatch.
+            - Calculate target based on reward.
+            - Update target based on next state.
+            - Fit model with state and target.
+            - Update epsilon value if applicable."""
+        
         minibatch = secrets.SystemRandom().sample(self.memory, batch_size)
         for state, action, reward, next_state, done in minibatch:
             target = reward
@@ -54,9 +112,31 @@ class DQNAgent:
             self.epsilon *= self.epsilon_decay
 
     def load(self, name):
+        """Loads weights for a given model.
+        Parameters:
+            - name (str): Name of the weights file to be loaded.
+        Returns:
+            - None: Does not return any value.
+        Processing Logic:
+            - Load weights from given file.
+            - Use self.model to access model.
+            - Use .load_weights() method.
+            - Use name parameter as input."""
+        
         self.model.load_weights(name)
 
     def save(self, name):
+        """Saves the weights of the model.
+        Parameters:
+            - name (str): Name of the file to save the weights to.
+        Returns:
+            - None: Does not return anything.
+        Processing Logic:
+            - Saves the weights of the model.
+            - Uses the name provided to save the weights.
+            - Does not return anything.
+            - Only works for models."""
+        
         self.model.save_weights(name)
 
 
