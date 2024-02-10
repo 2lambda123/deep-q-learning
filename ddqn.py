@@ -14,6 +14,19 @@ EPISODES = 5000
 
 class DQNAgent:
     def __init__(self, state_size, action_size):
+        """Function to initialize the Deep Q-Network agent.
+        Parameters:
+            - state_size (int): The dimension of the state space.
+            - action_size (int): The dimension of the action space.
+        Returns:
+            - None
+        Processing Logic:
+            - Initialize the agent's memory.
+            - Set the discount rate, exploration rate, minimum exploration rate, and exploration rate decay.
+            - Set the learning rate.
+            - Build the agent's model and target model.
+            - Update the target model."""
+        
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=2000)
@@ -33,6 +46,20 @@ class DQNAgent:
     """
 
     def _huber_loss(self, y_true, y_pred, clip_delta=1.0):
+        """Calculates the Huber loss between y_true and y_pred.
+        Parameters:
+            - y_true (tensor): True values.
+            - y_pred (tensor): Predicted values.
+            - clip_delta (float): Threshold for clipping the error.
+        Returns:
+            - tensor: Huber loss between y_true and y_pred.
+        Processing Logic:
+            - Calculate the absolute error.
+            - Check if the error is within the threshold.
+            - Calculate the squared loss if within threshold.
+            - Calculate the quadratic loss if outside threshold.
+            - Return the mean of the two losses."""
+        
         error = y_true - y_pred
         cond  = K.abs(error) <= clip_delta
 
@@ -42,6 +69,17 @@ class DQNAgent:
         return K.mean(tf.where(cond, squared_loss, quadratic_loss))
 
     def _build_model(self):
+        """Builds a neural network model for deep Q-learning.
+        Parameters:
+            - self (object): The object calling the function.
+        Returns:
+            - model (object): The built neural network model.
+        Processing Logic:
+            - Create a sequential model.
+            - Add two dense layers with ReLU activation.
+            - Add a dense layer with linear activation.
+            - Compile the model with a custom loss function and Adam optimizer."""
+        
         # Neural Net for Deep-Q learning Model
         model = Sequential()
         model.add(Dense(24, input_dim=self.state_size, activation='relu'))
@@ -52,19 +90,68 @@ class DQNAgent:
         return model
 
     def update_target_model(self):
+        """Copies weights from model to target_model.
+        Parameters:
+            - self (class): The class object.
+        Returns:
+            - None: No return value.
+        Processing Logic:
+            - Copy weights from model to target_model."""
+        
         # copy weights from model to target_model
         self.target_model.set_weights(self.model.get_weights())
 
     def memorize(self, state, action, reward, next_state, done):
+        """This function adds the given state, action, reward, next_state, and done values to the memory list.
+        Parameters:
+            - state (object): The current state of the environment.
+            - action (object): The action taken in the current state.
+            - reward (float): The reward received for taking the action.
+            - next_state (object): The resulting state after taking the action.
+            - done (bool): Indicates if the episode is complete.
+        Returns:
+            - None: This function does not return any values.
+        Processing Logic:
+            - Appends the given values to the memory list.
+            - Memory list stores tuples of (state, action, reward, next_state, done).
+            - Used for experience replay in reinforcement learning.
+            - Helps improve learning by breaking correlations between consecutive samples."""
+        
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
+        """"Returns an action based on the given state using epsilon-greedy algorithm.
+        Parameters:
+            - state (numpy array): Current state of the environment.
+        Returns:
+            - action (int): Action to be taken by the agent.
+        Processing Logic:
+            - Randomly selects an action with probability epsilon.
+            - Otherwise, uses the model to predict the best action.
+            - Returns the index of the highest predicted action.
+            - Uses numpy.argmax() to handle multiple actions.
+            - Uses secrets.SystemRandom() for secure random number generation.""""
+        
         if np.random.rand() <= self.epsilon:
             return secrets.SystemRandom().randrange(self.action_size)
         act_values = self.model.predict(state)
         return np.argmax(act_values[0])  # returns action
 
     def replay(self, batch_size):
+        """Docstring:
+        Replays a batch of experiences from the agent's memory and updates the model's weights based on the Bellman equation.
+        Parameters:
+            - batch_size (int): Number of experiences to replay.
+        Returns:
+            - None: This function does not return any values.
+        Processing Logic:
+            - Sample experiences from memory randomly.
+            - Update the target value for the chosen action.
+            - Fit the model to the updated target value.
+            - Update the exploration rate.
+        Example:
+            replay(32)"""
+        
         minibatch = secrets.SystemRandom().sample(self.memory, batch_size)
         for state, action, reward, next_state, done in minibatch:
             target = self.model.predict(state)
@@ -80,9 +167,29 @@ class DQNAgent:
             self.epsilon *= self.epsilon_decay
 
     def load(self, name):
+        """Loads the weights of a model.
+        Parameters:
+            - name (str): Name of the file containing the weights to be loaded.
+        Returns:
+            - None: The function does not return anything.
+        Processing Logic:
+            - Load weights from file.
+            - Update the model with the loaded weights."""
+        
         self.model.load_weights(name)
 
     def save(self, name):
+        """Saves the weights of the model.
+        Parameters:
+            - name (str): Name of the file to save the weights to.
+        Returns:
+            - None: No return value.
+        Processing Logic:
+            - Save weights to specified file.
+            - Model must be trained before saving.
+            - Name must include file extension.
+            - Example: save("model_weights.h5")"""
+        
         self.model.save_weights(name)
 
 
